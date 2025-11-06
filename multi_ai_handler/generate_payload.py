@@ -1,6 +1,8 @@
 import mimetypes
 from typing import Any
 
+from multi_ai_handler.extract_md import extract_structured_md
+
 def generate_openai_payload(system_prompt: str, filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
     if not filename and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
@@ -117,7 +119,7 @@ def generate_claude_payload(filename: str | None, encoded_data: str | None, user
 
     return messages
 
-def generate_ollama_payload(system_prompt: str | None, user_text: str | None) -> list[dict[str, Any]]:
+def generate_ollama_payload(system_prompt: str | None, filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
     messages = []
 
     if system_prompt:
@@ -126,9 +128,18 @@ def generate_ollama_payload(system_prompt: str | None, user_text: str | None) ->
             "content": system_prompt
         })
 
+    content = []
+
+    if user_text:
+        content.append(user_text)
+    if filename and encoded_data:
+        file_text = extract_structured_md(filename, encoded_data)
+        if file_text:
+            content.append(f"\n\n[File: {filename}]\n{file_text}")
+
     user_message = {
         "role": "user",
-        "content": user_text or ""
+        "content": "\n\n".join(content) if content else ""
     }
 
     messages.append(user_message)

@@ -1,21 +1,12 @@
 [project]
 name = "multi-ai-handler"
-version = "1.0.1"
+version = "1.1.0"
 description = "Unified Python interface for multiple AI providers with support for text, images, and documents."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "anthropic>=0.72.0",
-    "python-dotenv>=0.19.0",
-    "google-generativeai>=0.8.5",
-    "openai>=2.7.1",
-    "pydantic>=2.0.0",
-    "dotenv>=0.9.9",
-    "ollama>=0.6.0",
-]
 license = {text = "MIT"}
 authors = [
-    {name = "Viktor Sharha", email = "vsharha@example.com"}
+    {name = "Viktor Sharha"}
 ]
 keywords = ["ai", "openai", "anthropic", "claude", "gemini", "openrouter", "llm", "api"]
 classifiers = [
@@ -29,6 +20,32 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "anthropic>=0.72.0",
+    "python-dotenv>=0.19.0",
+    "google-generativeai>=0.8.5",
+    "openai>=2.7.1",
+    "pydantic>=2.0.0",
+    "dotenv>=0.9.9",
+    "easyocr>=1.7.2",
+]
+
+[project.optional-dependencies]
+local = [
+    "ollama>=0.6.0",
+    "docling>=2.61.1",
+    "easyocr>=1.7.2",
+]
+ollama = ["ollama>=0.6.0"]
+docling = [
+    "docling>=2.61.1",
+    "easyocr>=1.7.2",
+]
+all = [
+    "ollama>=0.6.0",
+    "docling>=2.61.1",
+    "easyocr>=1.7.2",
 ]
 
 [project.urls]

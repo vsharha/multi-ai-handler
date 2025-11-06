@@ -1,6 +1,6 @@
 # Multi AI Handler
 
-A unified Python library for interacting with multiple AI providers through a consistent interface. Supports text and file inputs across OpenAI, Anthropic Claude, Google Gemini, and OpenRouter APIs.
+A unified Python library for interacting with multiple AI providers through a consistent interface. Supports text and file inputs across OpenAI, Anthropic Claude, Google Gemini, OpenRouter, and Ollama (local LLMs).
 
 ## Features
 
@@ -8,8 +8,11 @@ A unified Python library for interacting with multiple AI providers through a co
 - Support for text-only, file-only, or combined text and file inputs
 - Automatic payload formatting for each provider's API requirements
 - Support for images and documents (PDF)
+- Local LLM support with Ollama
+- Advanced document processing with Docling (OCR, table extraction)
 - Streaming support for Anthropic Claude
 - Environment-based API key management
+- Optional dependencies for lightweight installations
 
 ## Supported Providers
 
@@ -17,19 +20,45 @@ A unified Python library for interacting with multiple AI providers through a co
 - Google Gemini
 - OpenAI
 - OpenRouter
+- Ollama (Local LLMs)
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.11 or higher
-- uv package manager
 
-### Setup
+### Basic Installation
 
 ```bash
 pip install multi-ai-handler
 ```
+
+This installs the core package with support for Anthropic, Google, OpenAI, and OpenRouter.
+
+### Optional Dependencies
+
+For local LLM support and advanced document processing, install optional dependencies:
+
+```bash
+# For Ollama support (local LLMs)
+pip install multi-ai-handler[ollama]
+
+# For document processing with Docling (OCR, table extraction)
+pip install multi-ai-handler[docling]
+
+# For full local LLM support with document processing
+pip install multi-ai-handler[local]
+
+# Install all optional dependencies
+pip install multi-ai-handler[all]
+```
+
+**Optional features:**
+- `ollama` - Local LLM support via Ollama
+- `docling` - Advanced document processing (OCR, table extraction) with EasyOCR
+- `local` - Both ollama and docling for complete local setup
+- `all` - All optional dependencies
 
 ## Setup
 
@@ -52,6 +81,7 @@ from multi_ai_handler import (
     request_google,
     request_openai,
     request_openrouter,
+    request_ollama,  # For local LLMs
     Providers
 )
 ```
@@ -68,6 +98,41 @@ response = request_anthropic(
     user_text="What is the capital of France?",
     model="claude-3-5-sonnet-20241022",
     temperature=0.7
+)
+print(response)
+```
+
+### Local LLM with Ollama
+
+```python
+from multi_ai_handler import request_ollama
+
+# Requires: pip install multi-ai-handler[ollama]
+# and Ollama running locally
+
+response = request_ollama(
+    system_prompt="You are a helpful assistant.",
+    user_text="What is the capital of France?",
+    model="llama3.2",
+    temperature=0.7
+)
+print(response)
+```
+
+### Local document processing with Ollama
+
+```python
+from multi_ai_handler import request_ollama
+
+# Requires: pip install multi-ai-handler[local]
+# Extracts text from documents using Docling (OCR, tables, etc.)
+
+response = request_ollama(
+    system_prompt="You are a document analysis assistant.",
+    user_text="Summarize the key points from this document.",
+    file="document.pdf",
+    model="llama3.2",
+    temperature=0.0
 )
 print(response)
 ```
@@ -277,6 +342,29 @@ def request_openrouter(
 
 Uses OpenAI-compatible format. Requires `OPENROUTER_API_KEY` in environment.
 
+### `request_ollama()`
+
+Makes a request to a local Ollama instance for running LLMs locally.
+
+```python
+def request_ollama(
+    system_prompt: str,
+    user_text: str = None,
+    file: str | Path | dict = None,
+    model: str = None,
+    temperature: float = 0.0
+) -> str
+```
+
+**Requirements:**
+- Install with: `pip install multi-ai-handler[ollama]`
+- For document processing: `pip install multi-ai-handler[local]`
+- Ollama must be running locally
+
+**Supported file types**: Documents (PDF, DOCX, etc.) via Docling extraction
+
+**Note**: File processing extracts text using Docling (OCR, table extraction) and includes it in the prompt.
+
 ### `request_ai()` (Unified Interface)
 
 Unified function that automatically routes to the appropriate provider with built-in JSON parsing support.
@@ -308,6 +396,7 @@ def request_ai(
 - `Providers.ANTHROPIC`
 - `Providers.OPENAI`
 - `Providers.OPENROUTER`
+- `Providers.OLLAMA`
 
 ## Payload Generation
 
@@ -316,11 +405,13 @@ The library automatically formats payloads for each provider using specialized f
 - `generate_openai_payload()`: Creates OpenAI-compatible content blocks
 - `generate_gemini_payload()`: Creates Gemini-compatible parts
 - `generate_claude_payload()`: Creates Claude-compatible content blocks
+- `generate_ollama_payload()`: Creates Ollama-compatible messages with text extraction
 
 These functions handle:
 - MIME type detection from filenames
 - Base64 data URL formatting
 - Provider-specific content structure
+- Document text extraction (Ollama with Docling)
 - Validation of required inputs
 
 ## Error Handling

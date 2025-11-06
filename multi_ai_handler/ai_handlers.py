@@ -2,7 +2,12 @@ import os
 import base64
 from pathlib import Path
 from dotenv import load_dotenv
-import ollama
+
+try:
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
 
 import google.generativeai as genai
 from openai import OpenAI
@@ -13,7 +18,6 @@ from multi_ai_handler.generate_payload import generate_openai_payload, generate_
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
 
 def _process_file(file: str | Path | dict | None) -> tuple[str | None, str | None]:
     if file is None:
@@ -95,10 +99,13 @@ def request_openai(system_prompt: str, user_text: str=None, file: str | Path | d
     return completion.choices[0].message.content
 
 def request_ollama(system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0) -> str:
-    if file is not None:
-        raise ValueError("File handling is not supported for Ollama. Please use a different provider for file-based requests.")
+    if not OLLAMA_AVAILABLE:
+        raise ImportError(
+            "Ollama is not installed. Install it with: pip install multi-ai-handler[ollama]"
+        )
 
-    messages: list = generate_ollama_payload(system_prompt, user_text)
+    filename, encoded_data = _process_file(file)
+    messages: list = generate_ollama_payload(system_prompt, filename, encoded_data, user_text)
 
     response = ollama.chat(
         model=model,
