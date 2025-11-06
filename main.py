@@ -1,4 +1,4 @@
-from multi_ai_handler.multi_ai_handler import request_ai
+from multi_ai_handler import request_ai
 
 def main():
     response = request_ai(system_prompt="You're a helpful assistant", user_text="Hello", provider="google")

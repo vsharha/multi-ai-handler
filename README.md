@@ -49,11 +49,13 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 ### 2. Import the library
 
 ```python
-from multi_ai_handler.ai_handlers import (
+from multi_ai_handler import (
+    request_ai,
     request_anthropic,
-    request_gemini,
+    request_google,
     request_openai,
-    request_openrouter
+    request_openrouter,
+    Providers
 )
 ```
 
@@ -62,7 +64,7 @@ from multi_ai_handler.ai_handlers import (
 ### Text-only requests
 
 ```python
-from multi_ai_handler.ai_handlers import request_anthropic
+from multi_ai_handler import request_anthropic
 
 response = request_anthropic(
     system_prompt="You are a helpful assistant.",
@@ -77,13 +79,13 @@ print(response)
 
 ```python
 import base64
-from multi_ai_handler.ai_handlers import request_gemini
+from multi_ai_handler import request_google
 
 # Read and encode image
 with open("image.jpg", "rb") as f:
     encoded_image = base64.b64encode(f.read()).decode()
 
-response = request_gemini(
+response = request_google(
     system_prompt="You are an image analysis expert.",
     user_text="Describe what you see in this image.",
     filename="image.jpg",
@@ -98,7 +100,7 @@ print(response)
 
 ```python
 import base64
-from multi_ai_handler.ai_handlers import request_anthropic
+from multi_ai_handler import request_anthropic
 
 # Read and encode PDF
 with open("document.pdf", "rb") as f:
@@ -119,13 +121,13 @@ print(response)
 
 ```python
 import base64
-from multi_ai_handler.ai_handlers import request_gemini
+from multi_ai_handler import request_google
 
 with open("chart.png", "rb") as f:
     encoded_image = base64.b64encode(f.read()).decode()
 
 # User text can be None when only analyzing a file
-response = request_gemini(
+response = request_google(
     system_prompt="Extract all text and data from images.",
     filename="chart.png",
     encoded_data=encoded_image,
@@ -139,7 +141,7 @@ print(response)
 The library provides a unified `request_ai()` function that automatically routes to the appropriate provider and supports JSON output parsing:
 
 ```python
-from multi_ai_handler.multi_ai_handler import request_ai, Providers
+from multi_ai_handler import request_ai, Providers
 
 # Basic usage with default provider (Google)
 response = request_ai(
@@ -322,6 +324,8 @@ The library raises `ValueError` in the following cases:
 Example:
 
 ```python
+from multi_ai_handler import request_anthropic
+
 try:
     response = request_anthropic(
         system_prompt="You are helpful.",
