@@ -369,6 +369,7 @@ dependencies = [
     { name = "dotenv" },
     { name = "google-generativeai" },
     { name = "openai" },
+    { name = "pydantic" },
 ]
 
 [package.metadata]
@@ -377,6 +378,7 @@ requires-dist = [
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "google-generativeai", specifier = ">=0.8.5" },
     { name = "openai", specifier = ">=2.7.1" },
+    { name = "pydantic", specifier = ">=2.12.4" },
 ]
 
 [[package]]
