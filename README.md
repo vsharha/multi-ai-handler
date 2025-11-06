@@ -23,7 +23,7 @@ A unified Python library for interacting with multiple AI providers through a co
 
 ### Prerequisites
 
-- Python 3.14 or higher
+- Python 3.11 or higher
 - uv package manager
 
 ### Setup
