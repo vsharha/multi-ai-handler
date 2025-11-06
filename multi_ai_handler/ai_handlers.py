@@ -13,10 +13,6 @@ from multi_ai_handler.generate_payload import generate_openai_payload, generate_
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-logging.getLogger("httpcore").setLevel(logging.ERROR)
-logging.getLogger("httpx").setLevel(logging.ERROR)
-logging.getLogger("google.generativeai").setLevel(logging.ERROR)
-logging.getLogger("openai").setLevel(logging.ERROR)
 
 
 def _process_file(file: str | Path | dict | None) -> tuple[str | None, str | None]:
