@@ -28,9 +28,7 @@ A unified Python library for interacting with multiple AI providers through a co
 ### Setup
 
 ```bash
-git clone https://github.com/vsharha/multi-ai-handler.git
-cd multi-ai-handler
-uv sync
+pip install multi-ai-handler
 ```
 
 ## Setup

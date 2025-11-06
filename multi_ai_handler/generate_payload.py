@@ -108,7 +108,6 @@ def generate_claude_payload(filename: str | None, encoded_data: str | None, user
                 }
             })
 
-    # Return messages array with user message
     messages = [
         {
             "role": "user",
