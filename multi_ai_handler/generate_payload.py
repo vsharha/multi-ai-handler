@@ -1,9 +1,17 @@
 import mimetypes
 from typing import Any
 
-def generate_openai_payload(filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
+def generate_openai_payload(system_prompt: str, filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
     if not filename and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
+
+    messages = []
+
+    if system_prompt:
+        messages.append({
+            "role": "system",
+            "content": system_prompt
+        })
 
     content = []
 
@@ -34,9 +42,14 @@ def generate_openai_payload(filename: str | None, encoded_data: str | None, user
                 }
             })
 
-    return content
+    messages.append({
+        "role": "user",
+        "content": content
+    })
 
-def generate_gemini_payload(filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
+    return messages
+
+def generate_google_payload(filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
     if not filename and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
 
@@ -95,4 +108,12 @@ def generate_claude_payload(filename: str | None, encoded_data: str | None, user
                 }
             })
 
-    return content
+    # Return messages array with user message
+    messages = [
+        {
+            "role": "user",
+            "content": content
+        }
+    ]
+
+    return messages

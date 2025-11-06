@@ -1,7 +1,7 @@
 import json
 from typing import Optional
 
-from grade_iq.ai.ai_handlers import request_openrouter, request_gemini, request_anthropic, request_openai
+from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai
 from pydantic import BaseModel, model_validator
 from enum import Enum, auto
 
@@ -46,13 +46,13 @@ class ProviderPayload(BaseModel):
     ai_config: Optional[AIConfig] = AIConfig()
 
 PROVIDER_FUNCTIONS = {
-    Providers.GOOGLE: request_gemini,
+    Providers.GOOGLE: request_google,
     Providers.ANTHROPIC: request_anthropic,
     Providers.OPENAI: request_openai,
     Providers.OPENROUTER: request_openrouter,
 }
 
-def request_ai(system_prompt: str, user_text: str=None, filename: str=None, encoded_data: str=None, provider: str | Providers | None = None, model:str | None=None, temperature: float=0.2) -> dict:
+def request_ai(system_prompt: str, user_text: str=None, filename: str=None, encoded_data: str=None, provider: str | Providers | None = None, model:str | None=None, temperature: float=0.2, json_output: bool = False) -> dict:
     if provider is None:
         provider = Providers.GOOGLE
     else:
@@ -63,7 +63,11 @@ def request_ai(system_prompt: str, user_text: str=None, filename: str=None, enco
 
     response_text: str = PROVIDER_FUNCTIONS[provider](system_prompt, user_text, filename, encoded_data, model, temperature)
 
-    return parse_ai_response(response_text)
+    if json_output:
+        return parse_ai_response(response_text)
+
+    else:
+        return response_text
 
 
 def parse_ai_response(response_text: str) -> dict:
