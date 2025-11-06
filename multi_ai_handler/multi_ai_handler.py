@@ -1,8 +1,6 @@
 import json
-from typing import Optional
 
 from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai
-from pydantic import BaseModel, model_validator
 from enum import Enum, auto
 
 class LowercaseEnum(str, Enum):
@@ -21,29 +19,6 @@ SUPPORTED_MODELS = {
     Providers.OPENAI: ['gpt-5', 'gpt-4o'],
     Providers.OPENROUTER: ['google/gemini-2.5-pro', 'google/gemini-2.5-flash', 'anthropic/claude-sonnet-4.5', 'anthropic/claude-opus-4.1'],
 }
-
-class AIConfig(BaseModel):
-    provider: Optional[Providers] = None
-    model: Optional[str] = None
-
-    @model_validator(mode="after")
-    @classmethod
-    def validate_model(cls, payload):
-        if not payload.provider:
-            if payload.model:
-                raise ValueError("Model specified without provider")
-            return payload
-
-        if payload.provider not in SUPPORTED_MODELS:
-            raise ValueError("Unsupported provider selected")
-
-        if payload.model and payload.model not in SUPPORTED_MODELS[payload.provider]:
-            raise ValueError("Unsupported model selected for provider")
-
-        return payload
-
-class ProviderPayload(BaseModel):
-    ai_config: Optional[AIConfig] = AIConfig()
 
 PROVIDER_FUNCTIONS = {
     Providers.GOOGLE: request_google,
