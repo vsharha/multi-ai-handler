@@ -2,13 +2,13 @@ import os
 import base64
 from pathlib import Path
 from dotenv import load_dotenv
-import logging
+import ollama
 
 import google.generativeai as genai
 from openai import OpenAI
 import anthropic
 
-from multi_ai_handler.generate_payload import generate_openai_payload, generate_google_payload, generate_claude_payload
+from multi_ai_handler.generate_payload import generate_openai_payload, generate_google_payload, generate_claude_payload, generate_ollama_payload
 
 load_dotenv()
 
@@ -93,3 +93,17 @@ def request_openai(system_prompt: str, user_text: str=None, file: str | Path | d
     )
 
     return completion.choices[0].message.content
+
+def request_ollama(system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0) -> str:
+    if file is not None:
+        raise ValueError("File handling is not supported for Ollama. Please use a different provider for file-based requests.")
+
+    messages: list = generate_ollama_payload(system_prompt, user_text)
+
+    response = ollama.chat(
+        model=model,
+        messages=messages,
+        options={"temperature": temperature},
+    )
+
+    return response['message']['content']

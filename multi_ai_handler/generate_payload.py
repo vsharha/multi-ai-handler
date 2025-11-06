@@ -116,3 +116,21 @@ def generate_claude_payload(filename: str | None, encoded_data: str | None, user
     ]
 
     return messages
+
+def generate_ollama_payload(system_prompt: str | None, user_text: str | None) -> list[dict[str, Any]]:
+    messages = []
+
+    if system_prompt:
+        messages.append({
+            "role": "system",
+            "content": system_prompt
+        })
+
+    user_message = {
+        "role": "user",
+        "content": user_text or ""
+    }
+
+    messages.append(user_message)
+
+    return messages

@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai
+from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai, request_ollama
 from enum import Enum, auto
 
 class LowercaseEnum(str, Enum):
@@ -13,12 +13,14 @@ class Providers(LowercaseEnum):
     ANTHROPIC = auto()
     OPENAI = auto()
     OPENROUTER = auto()
+    OLLAMA = auto()
 
 SUPPORTED_MODELS = {
     Providers.GOOGLE: ["gemini-2.5-pro", "gemini-2.5-flash"],
     Providers.ANTHROPIC: ['claude-sonnet-4-5-20250929', 'claude-opus-4-1-20250805'],
     Providers.OPENAI: ['gpt-5', 'gpt-4o'],
     Providers.OPENROUTER: ['google/gemini-2.5-pro', 'google/gemini-2.5-flash', 'anthropic/claude-sonnet-4.5', 'anthropic/claude-opus-4.1'],
+    Providers.OLLAMA: ['gpt-oss:20b']
 }
 
 PROVIDER_FUNCTIONS = {
@@ -26,6 +28,7 @@ PROVIDER_FUNCTIONS = {
     Providers.ANTHROPIC: request_anthropic,
     Providers.OPENAI: request_openai,
     Providers.OPENROUTER: request_openrouter,
+    Providers.OLLAMA: request_ollama
 }
 
 def request_ai(system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, provider: str | Providers | None = None, model:str | None=None, temperature: float=0.2, json_output: bool = False) -> dict | str:
