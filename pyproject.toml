@@ -30,6 +30,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ollama = [
+    "ollama>=0.6.0",
+]
+docling = [
+    "docling>=2.61.1",
+]
 local = [
     "ollama>=0.6.0",
     "docling>=2.61.1",

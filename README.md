@@ -20,6 +20,7 @@ A unified Python library for interacting with multiple AI providers through a co
 - Google Gemini
 - OpenAI
 - OpenRouter
+- Cerebras
 - Ollama (Local LLMs)
 
 ## Installation
@@ -58,6 +59,7 @@ pip install multi-ai-handler[all]
 - `ollama` - Local LLM support via Ollama
 - `docling` - Advanced document processing (OCR, table extraction) with EasyOCR
 - `local` - Both ollama and docling for complete local setup
+- `extra` - Cerebras cloud inference support
 - `all` - All optional dependencies
 
 ## Setup
@@ -68,7 +70,9 @@ Create a `.env` file in your project root with your API keys:
 
 ```env
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+CEREBRAS_API_KEY=your_cerebras_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
@@ -109,7 +113,9 @@ response = request_ai(
 )
 ```
 
-Supported providers: `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, `"ollama"`
+Supported providers: `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, `"cerebras"`*, `"ollama"`*
+
+*Requires optional dependencies: `pip install multi-ai-handler[extra]` for Cerebras, `pip install multi-ai-handler[ollama]` for Ollama
 
 #### JSON output parsing
 
@@ -169,6 +175,7 @@ For direct access to provider-specific features, you can use individual function
 ```python
 from multi_ai_handler import (
     request_anthropic,
+    request_cerebras,
     request_google,
     request_openai,
     request_openrouter,
@@ -214,6 +221,16 @@ response = request_ollama(
     system_prompt="Summarize this document.",
     file="document.pdf",  # Uses Docling for OCR and table extraction
     model="llama3.2"
+)
+```
+
+**Cerebras** (high-performance cloud inference):
+```python
+# Requires: pip install multi-ai-handler[extra]
+response = request_cerebras(
+    system_prompt="You are a helpful assistant.",
+    user_text="Explain quantum computing.",
+    model="qwen-3-235b-a22b-instruct-2507"
 )
 ```
 
@@ -362,6 +379,28 @@ def request_ollama(
 **Supported file types**: Documents (PDF, DOCX, etc.) via Docling extraction
 
 **Note**: File processing extracts text using Docling (OCR, table extraction) and includes it in the prompt.
+
+### `request_cerebras()`
+
+Makes a request to Cerebras cloud inference API for high-performance model inference.
+
+```python
+def request_cerebras(
+    system_prompt: str,
+    user_text: str = None,
+    file: str | Path | dict = None,
+    model: str = None,
+    temperature: float = 0.0
+) -> str
+```
+
+**Requirements:**
+- Install with: `pip install multi-ai-handler[extra]`
+- Requires `CEREBRAS_API_KEY` environment variable
+
+**Supported models**: `gpt-oss-120b`, `qwen-3-235b-a22b-instruct-2507`
+
+**Note**: File processing extracts text using Docling and includes it in the prompt (same as Ollama).
 
 ---
 
