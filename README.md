@@ -113,7 +113,7 @@ response = request_ai(
 )
 ```
 
-Supported providers: `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, `"cerebras"`*, `"ollama"`*
+Supported providers: `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, `"cerebras"`, `"ollama"`
 
 *Requires optional dependencies: `pip install multi-ai-handler[extra]` for Cerebras, `pip install multi-ai-handler[ollama]` for Ollama
 
