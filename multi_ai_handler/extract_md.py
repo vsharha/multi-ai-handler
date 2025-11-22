@@ -22,7 +22,7 @@ logging.getLogger("docling").setLevel(logging.ERROR)
 def extract_structured_md(filename: str, encoded_data: str,  ocr_threshold:float = 0.1) -> str:
     if not DOCLING_AVAILABLE:
         raise ImportError(
-            "Docling is not installed. Install it with: pip install multi-ai-handler[docling]"
+            "Docling is not installed (used for local file processing). Install it with: pip install multi-ai-handler[docling]"
         )
 
     file_like = io.BytesIO(base64.b64decode(encoded_data))

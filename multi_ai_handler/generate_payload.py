@@ -1,10 +1,32 @@
 import mimetypes
 from typing import Any
+import base64
+from pathlib import Path
 
 from multi_ai_handler.extract_md import extract_structured_md
 
-def generate_openai_payload(system_prompt: str, filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
-    if not filename and not user_text:
+def _process_file(file: str | Path | dict | None) -> tuple[str | None, str | None]:
+    if file is None:
+        return None, None
+
+    if isinstance(file, dict):
+        return file.get("filename"), file.get("encoded_data")
+
+    file_path = Path(file)
+    if not file_path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+    if not file_path.is_file():
+        raise ValueError(f"Path is not a file: {file_path}")
+
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+
+    encoded = base64.b64encode(file_data).decode()
+    return file_path.name, encoded
+
+
+def generate_openai_payload(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None) -> list[dict[str, Any]]:
+    if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
 
     messages = []
@@ -23,7 +45,8 @@ def generate_openai_payload(system_prompt: str, filename: str | None, encoded_da
             "text": user_text
         })
 
-    if filename and encoded_data:
+    if file:
+        filename, encoded_data = _process_file(file)
         mime_type, _ = mimetypes.guess_type(filename)
         if not mime_type:
             raise ValueError("Could not detect MIME type from filename.")
@@ -51,8 +74,8 @@ def generate_openai_payload(system_prompt: str, filename: str | None, encoded_da
 
     return messages
 
-def generate_google_payload(filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
-    if not filename and not user_text:
+def generate_google_payload(user_text: str | None, file: str | Path | dict | None=None) -> list[dict[str, Any]]:
+    if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
 
     parts = []
@@ -60,7 +83,8 @@ def generate_google_payload(filename: str | None, encoded_data: str | None, user
     if user_text:
         parts.append({"text": user_text})
 
-    if filename and encoded_data:
+    if file:
+        filename, encoded_data = _process_file(file)
         mime_type, _ = mimetypes.guess_type(filename)
         if not mime_type:
             raise ValueError("Could not detect MIME type from filename.")
@@ -74,8 +98,8 @@ def generate_google_payload(filename: str | None, encoded_data: str | None, user
 
     return parts
 
-def generate_claude_payload(filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
-    if not filename and not user_text:
+def generate_claude_payload(user_text: str | None, file: str | Path | dict | None=None) -> list[dict[str, Any]]:
+    if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
 
     content = []
@@ -86,7 +110,8 @@ def generate_claude_payload(filename: str | None, encoded_data: str | None, user
             "text": user_text
         })
 
-    if filename and encoded_data:
+    if file:
+        filename, encoded_data = _process_file(file)
         mime_type, _ = mimetypes.guess_type(filename)
         if not mime_type:
             raise ValueError("Could not detect MIME type from filename.")
@@ -119,7 +144,10 @@ def generate_claude_payload(filename: str | None, encoded_data: str | None, user
 
     return messages
 
-def generate_ollama_payload(system_prompt: str | None, filename: str | None, encoded_data: str | None, user_text: str | None) -> list[dict[str, Any]]:
+def generate_openai_payload_local(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None) -> list[dict[str, Any]]:
+    if not file and not user_text:
+        raise ValueError("Either filename or user_text must be provided.")
+
     messages = []
 
     if system_prompt:
@@ -132,7 +160,8 @@ def generate_ollama_payload(system_prompt: str | None, filename: str | None, enc
 
     if user_text:
         content.append(user_text)
-    if filename and encoded_data:
+    if file:
+        filename, encoded_data = _process_file(file)
         file_text = extract_structured_md(filename, encoded_data)
         if file_text:
             content.append(f"\n\n[File: {filename}]\n{file_text}")

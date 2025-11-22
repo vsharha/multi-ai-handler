@@ -1,11 +1,12 @@
 import json
 from pathlib import Path
 
-from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai, request_ollama
-from aenum import Enum, auto
+from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai, \
+    request_ollama, request_cerebras
+from enum import Enum, auto
 
 class LowercaseEnum(str, Enum):
-    def _generate_next_value_(self):
+    def _generate_next_value_(self, start, count, last_values):
         return self.lower()
 
 class Providers(LowercaseEnum):
@@ -14,13 +15,15 @@ class Providers(LowercaseEnum):
     OPENAI = auto()
     OPENROUTER = auto()
     OLLAMA = auto()
+    CEREBRAS = auto()
 
 SUPPORTED_MODELS = {
     Providers.GOOGLE: ["gemini-2.5-pro", "gemini-2.5-flash"],
     Providers.ANTHROPIC: ['claude-sonnet-4-5-20250929', 'claude-opus-4-1-20250805'],
     Providers.OPENAI: ['gpt-5', 'gpt-4o'],
     Providers.OPENROUTER: ['google/gemini-2.5-pro', 'google/gemini-2.5-flash', 'anthropic/claude-sonnet-4.5', 'anthropic/claude-opus-4.1'],
-    Providers.OLLAMA: ['gpt-oss:20b']
+    Providers.OLLAMA: [],
+    Providers.CEREBRAS: ['gpt-oss-120b', 'qwen-3-235b-a22b-instruct-2507'],
 }
 
 PROVIDER_FUNCTIONS = {
@@ -28,7 +31,8 @@ PROVIDER_FUNCTIONS = {
     Providers.ANTHROPIC: request_anthropic,
     Providers.OPENAI: request_openai,
     Providers.OPENROUTER: request_openrouter,
-    Providers.OLLAMA: request_ollama
+    Providers.OLLAMA: request_ollama,
+    Providers.CEREBRAS: request_cerebras,
 }
 
 def request_ai(system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, provider: str | Providers | None = None, model:str | None=None, temperature: float=0.2, json_output: bool = False) -> dict | str:
@@ -38,7 +42,10 @@ def request_ai(system_prompt: str, user_text: str=None, file: str | Path | dict 
         provider = Providers(provider)
 
     if model is None:
-        model = SUPPORTED_MODELS[provider][0]
+        if len(SUPPORTED_MODELS[provider]) > 0:
+            model = SUPPORTED_MODELS[provider][0]
+        else:
+            raise ValueError("No model provided and no default model is available for the provider")
 
     response_text: str = PROVIDER_FUNCTIONS[provider](system_prompt, user_text, file, model, temperature)
 

@@ -27,8 +27,6 @@ dependencies = [
     "google-generativeai>=0.8.5",
     "openai>=2.7.1",
     "pydantic>=2.0.0",
-    "easyocr>=1.7.2",
-    "aenum>=3.1.16",
 ]
 
 [project.optional-dependencies]
@@ -37,12 +35,11 @@ local = [
     "docling>=2.61.1",
     "easyocr>=1.7.2",
 ]
-ollama = ["ollama>=0.6.0"]
-docling = [
-    "docling>=2.61.1",
-    "easyocr>=1.7.2",
+extra = [
+    "cerebras>=0.0.1",
 ]
 all = [
+    "cerebras>=0.0.1",
     "ollama>=0.6.0",
     "docling>=2.61.1",
     "easyocr>=1.7.2",
