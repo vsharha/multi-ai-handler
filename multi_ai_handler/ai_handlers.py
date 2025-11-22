@@ -118,8 +118,7 @@ def request_cerebras(system_prompt: str, user_text: str=None, file: str | Path |
         model=model,
         stream=False,
         max_completion_tokens=20000,
-        temperature=temperature,
-        top_p=0.8
+        temperature=temperature
     )
 
     return response.choices[0].message.content
