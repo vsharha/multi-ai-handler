@@ -23,7 +23,7 @@ SUPPORTED_MODELS = {
     Providers.OPENAI: ['gpt-5', 'gpt-4o'],
     Providers.OPENROUTER: ['google/gemini-2.5-pro', 'google/gemini-2.5-flash', 'anthropic/claude-sonnet-4.5', 'anthropic/claude-opus-4.1'],
     Providers.OLLAMA: [],
-    Providers.CEREBRAS: ['gpt-oss-120b', 'qwen-3-235b-a22b-instruct-2507'],
+    Providers.CEREBRAS: ['gpt-oss-120b', 'qwen-3-235b-a22b-instruct-2507', 'zai-glm-4.6'],
 }
 
 PROVIDER_FUNCTIONS = {

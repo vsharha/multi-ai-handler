@@ -164,11 +164,16 @@ def generate_openai_payload_local(user_text: str | None, system_prompt: str, fil
         filename, encoded_data = _process_file(file)
         file_text = extract_structured_md(filename, encoded_data)
         if file_text:
-            content.append(f"\n\n[File: {filename}]\n{file_text}")
+            content.append(f"""
+<<<FILE CONTENT>>>
+[Filename: {filename}]
+{file_text}
+<<<END FILE CONTENT>>>
+""")
 
     user_message = {
         "role": "user",
-        "content": "\n\n".join(content) if content else ""
+        "content": "\n".join(content) if content else ""
     }
 
     messages.append(user_message)
