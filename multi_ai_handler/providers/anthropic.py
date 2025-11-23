@@ -1,5 +1,4 @@
 from anthropic import Anthropic
-from anthropic.pagination import SyncPage
 
 from multi_ai_handler.ai_provider import AIProvider
 from pathlib import Path
@@ -29,5 +28,6 @@ class AnthropicProvider(AIProvider):
 
         return response
 
-    def list_models(self) -> SyncPage:
-        return self.client.models.list()
+    def list_models(self) -> list[str]:
+        response = self.client.models.list()
+        return [model.id for model in response.data]

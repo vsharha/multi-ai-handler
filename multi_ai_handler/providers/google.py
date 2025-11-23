@@ -2,8 +2,6 @@ from google import genai
 from google.genai import types
 from pathlib import Path
 
-from google.genai.pagers import Pager
-
 from multi_ai_handler.ai_provider import AIProvider
 from multi_ai_handler.generate_payload import generate_google_payload
 
@@ -26,5 +24,6 @@ class GoogleProvider(AIProvider):
 
         return response.text
 
-    def list_models(self) -> Pager:
-        return self.client.models.list()
+    def list_models(self) -> list[str]:
+        response = self.client.models.list()
+        return [model.name for model in response]

@@ -182,32 +182,3 @@ def generate_claude_payload(user_text: str | None, file: str | Path | dict | Non
     ]
 
     return messages
-
-def generate_local_payload(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None) -> list[dict[str, Any]]:
-    if not file and not user_text:
-        raise ValueError("Either filename or user_text must be provided.")
-
-    messages = []
-
-    if system_prompt:
-        messages.append({
-            "role": "system",
-            "content": system_prompt
-        })
-
-    content = []
-
-    if user_text:
-        content.append(user_text)
-    if file:
-        filename, encoded_data = _process_file(file)
-        content.append(process_local_file(filename, encoded_data))
-
-    user_message = {
-        "role": "user",
-        "content": "\n".join(content) if content else ""
-    }
-
-    messages.append(user_message)
-
-    return messages

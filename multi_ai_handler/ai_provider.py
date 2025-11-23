@@ -8,5 +8,5 @@ class AIProvider(ABC):
         pass
 
     @abstractmethod
-    def list_models(self) -> Any:
+    def list_models(self) -> list[str]:
         pass

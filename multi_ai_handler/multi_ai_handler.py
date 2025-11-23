@@ -31,14 +31,14 @@ class MultiAIHandler:
         else:
             return response_text
 
-    def list_models(self) -> dict:
+    def list_models(self) -> dict[str, list[str]]:
         models = {}
 
         for name, Provider in self.providers.items():
             try:
                 client = Provider()
                 models[name] = client.list_models()
-            except Exception as e:
+            except Exception:
                 models[name] = []
 
         return models

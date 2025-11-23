@@ -1,5 +1,4 @@
 from openai import OpenAI
-from openai.pagination import SyncPage
 
 from multi_ai_handler.ai_provider import AIProvider
 import os
@@ -32,5 +31,6 @@ class OpenAIProvider(AIProvider):
 
         return completion.choices[0].message.content
 
-    def list_models(self) -> SyncPage:
-        return self.client.models.list()
+    def list_models(self) -> list[str]:
+        response = self.client.models.list()
+        return [model.id for model in response.data]
