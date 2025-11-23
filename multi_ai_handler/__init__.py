@@ -1,30 +1,30 @@
-"""Multi AI Handler - Unified interface for multiple AI providers."""
-
 from multi_ai_handler.multi_ai_handler import (
     request_ai,
+    MultiAIHandler,
     parse_ai_response,
     Providers,
     SUPPORTED_MODELS,
 )
 
-from multi_ai_handler.ai_handlers import (
-    request_anthropic,
-    request_google,
-    request_openai,
-    request_openrouter,
-)
-
-__version__ = "1.0.0"
+from multi_ai_handler.providers.anthropic import AnthropicProvider
+from multi_ai_handler.providers.cerebras import CerebrasProvider
+from multi_ai_handler.providers.google import GoogleProvider
+from multi_ai_handler.providers.ollama import OllamaProvider
+from multi_ai_handler.providers.openai import OpenAIProvider
+from multi_ai_handler.providers.openrouter import OpenrouterProvider
 
 __all__ = [
     # Main unified interface
     "request_ai",
+    "MultiAIHandler",
     "parse_ai_response",
     "Providers",
     "SUPPORTED_MODELS",
-    # Provider-specific functions
-    "request_anthropic",
-    "request_google",
-    "request_openai",
-    "request_openrouter",
+    # Provider-specific classes
+    "AnthropicProvider",
+    "CerebrasProvider",
+    "GoogleProvider",
+    "OllamaProvider",
+    "OpenAIProvider",
+    "OpenrouterProvider",
 ]

@@ -1,9 +1,14 @@
 import json
 from pathlib import Path
 
-from multi_ai_handler.ai_handlers import request_openrouter, request_google, request_anthropic, request_openai, \
-    request_ollama, request_cerebras
 from enum import Enum, auto
+
+from multi_ai_handler import OpenrouterProvider
+from multi_ai_handler import AnthropicProvider
+from multi_ai_handler import CerebrasProvider
+from multi_ai_handler import GoogleProvider
+from multi_ai_handler import OllamaProvider
+from multi_ai_handler import OpenAIProvider
 
 class LowercaseEnum(str, Enum):
     def _generate_next_value_(self, start, count, last_values):
@@ -26,35 +31,60 @@ SUPPORTED_MODELS = {
     Providers.CEREBRAS: ['gpt-oss-120b', 'qwen-3-235b-a22b-instruct-2507', 'zai-glm-4.6'],
 }
 
-PROVIDER_FUNCTIONS = {
-    Providers.GOOGLE: request_google,
-    Providers.ANTHROPIC: request_anthropic,
-    Providers.OPENAI: request_openai,
-    Providers.OPENROUTER: request_openrouter,
-    Providers.OLLAMA: request_ollama,
-    Providers.CEREBRAS: request_cerebras,
-}
+class MultiAIHandler:
+    def __init__(self):
+        self.providers = {
+            Providers.GOOGLE: GoogleProvider,
+            Providers.ANTHROPIC: AnthropicProvider,
+            Providers.OPENAI: OpenAIProvider,
+            Providers.OPENROUTER: OpenrouterProvider,
+            Providers.OLLAMA: OllamaProvider,
+            Providers.CEREBRAS: CerebrasProvider,
+        }
 
-def request_ai(system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, provider: str | Providers | None = None, model:str | None=None, temperature: float=0.2, json_output: bool = False) -> dict | str:
-    if provider is None:
-        provider = Providers.GOOGLE
-    else:
-        provider = Providers(provider)
-
-    if model is None:
-        if len(SUPPORTED_MODELS[provider]) > 0:
-            model = SUPPORTED_MODELS[provider][0]
+    def request_ai(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, provider: str | Providers | None = None, model:str | None=None, temperature: float=0.2, json_output: bool = False) -> dict | str:
+        if provider is None:
+            provider = Providers.GOOGLE
         else:
-            raise ValueError("No model provided and no default model is available for the provider")
+            provider = Providers(provider)
 
-    response_text: str = PROVIDER_FUNCTIONS[provider](system_prompt, user_text, file, model, temperature)
+        if model is None:
+            if len(SUPPORTED_MODELS[provider]) > 0:
+                model = SUPPORTED_MODELS[provider][0]
+            else:
+                raise ValueError("No model provided and no default model is available for the provider")
 
-    if json_output:
-        return parse_ai_response(response_text)
+        Provider = self.providers[provider]
+        provider_obj = Provider()
 
-    else:
-        return response_text
+        response_text: str = provider_obj.generate(system_prompt, user_text, file, model, temperature)
 
+        if json_output:
+            return parse_ai_response(response_text)
+
+        else:
+            return response_text
+
+_handler = MultiAIHandler()
+
+def request_ai(
+    system_prompt: str,
+    user_text: str | None = None,
+    file: str | Path | dict | None = None,
+    provider: str | Providers | None = None,
+    model: str | None = None,
+    temperature: float = 0.2,
+    json_output: bool = False,
+) -> dict | str:
+    return _handler.request_ai(
+        system_prompt=system_prompt,
+        user_text=user_text,
+        file=file,
+        provider=provider,
+        model=model,
+        temperature=temperature,
+        json_output=json_output,
+    )
 
 def parse_ai_response(response_text: str) -> dict:
     response_text = response_text.strip()
