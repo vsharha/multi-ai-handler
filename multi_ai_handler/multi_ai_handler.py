@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Iterator
 
 from multi_ai_handler.ai_provider import AIProvider
 from multi_ai_handler.providers.openrouter import OpenrouterProvider
@@ -36,6 +37,12 @@ class AIProviderManager:
         else:
             return response_text
 
+    def stream(self, provider: str, model: str, system_prompt: str | None=None, user_text: str=None, file: str | Path | dict | None=None, temperature: float=0.2, local: bool=False) -> Iterator[str]:
+        Provider = self.providers[provider]
+        client = Provider()
+
+        yield from client.stream(system_prompt, user_text, file, model, temperature, local=local)
+
     def list_models(self) -> dict[str, list[str]]:
         models = {}
 
@@ -47,6 +54,12 @@ class AIProviderManager:
                 models[name] = []
 
         return models
+
+    def get_model_info(self, provider: str, model: str) -> dict:
+        Provider = self.providers[provider]
+        client = Provider()
+
+        return client.get_model_info(model)
 
 _handler = AIProviderManager()
 
@@ -70,6 +83,31 @@ def request_ai(
         json_output=json_output,
         local=local,
     )
+
+def stream_ai(
+    provider: str | None = None,
+    model: str | None = None,
+    system_prompt: str | None = None,
+    user_text: str | None = None,
+    file: str | Path | dict | None = None,
+    temperature: float = 0.2,
+    local: bool = False,
+) -> Iterator[str]:
+    yield from _handler.stream(
+        provider=provider,
+        model=model,
+        system_prompt=system_prompt,
+        user_text=user_text,
+        file=file,
+        temperature=temperature,
+        local=local,
+    )
+
+def get_model_info(provider: str, model: str) -> dict:
+    return _handler.get_model_info(provider=provider, model=model)
+
+def list_models() -> dict[str, list[str]]:
+    return _handler.list_models()
 
 def parse_ai_response(response_text: str) -> dict:
     response_text = response_text.strip()

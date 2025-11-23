@@ -3,6 +3,7 @@ from openai import OpenAI
 from multi_ai_handler.ai_provider import AIProvider
 import os
 from pathlib import Path
+from typing import Iterator
 
 from multi_ai_handler.generate_payload import generate_openai_payload
 
@@ -31,6 +32,31 @@ class OpenAIProvider(AIProvider):
 
         return completion.choices[0].message.content
 
+    def stream(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False) -> Iterator[str]:
+        if self.local:
+            local = True
+
+        messages: list = generate_openai_payload(user_text, system_prompt, file, local=local)
+
+        stream = self.client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            stream=True
+        )
+
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
+
     def list_models(self) -> list[str]:
         response = self.client.models.list()
         return [model.id for model in response.data]
+
+    def get_model_info(self, model: str) -> dict:
+        response = self.client.models.retrieve(model)
+        return {
+            "id": response.id,
+            "created": response.created,
+            "owned_by": response.owned_by,
+        }

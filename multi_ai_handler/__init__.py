@@ -6,6 +6,9 @@ from multi_ai_handler.multi_ai_handler import (
     request_ai,
     AIProviderManager,
     parse_ai_response,
+    stream_ai,
+    get_model_info,
+    list_models
 )
 
 from multi_ai_handler.providers.anthropic import AnthropicProvider
@@ -20,8 +23,11 @@ from multi_ai_handler.ai_provider import AIProvider
 __all__ = [
     # Main unified interface
     "request_ai",
+    "stream_ai",
     "AIProviderManager",
     "parse_ai_response",
+    "get_model_info",
+    "list_models",
     # Provider-specific classes
     "AnthropicProvider",
     "CerebrasProvider",

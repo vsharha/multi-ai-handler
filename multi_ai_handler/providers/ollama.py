@@ -1,5 +1,6 @@
 from multi_ai_handler.ai_provider import AIProvider
 from pathlib import Path
+from typing import Iterator
 import requests
 
 from multi_ai_handler.generate_payload import generate_ollama_payload
@@ -55,6 +56,22 @@ class OllamaProvider(AIProvider):
 
         return response['message']['content']
 
+    def stream(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False) -> Iterator[str]:
+        self._check_server()
+
+        messages: list = generate_ollama_payload(user_text, system_prompt, file)
+
+        stream = ollama.chat(
+            model=model,
+            messages=messages,
+            options={"temperature": temperature},
+            stream=True
+        )
+
+        for chunk in stream:
+            if chunk['message']['content']:
+                yield chunk['message']['content']
+
     def list_models(self) -> list[str]:
         self._check_server()
 
@@ -63,3 +80,17 @@ class OllamaProvider(AIProvider):
         data = resp.json()
 
         return [model["name"] for model in data.get("models", [])]
+
+    def get_model_info(self, model: str) -> dict:
+        self._check_server()
+
+        resp = requests.post(f"{self.base_url}/api/show", json={"name": model})
+        resp.raise_for_status()
+        data = resp.json()
+
+        return {
+            "name": model,
+            "modified_at": data.get("modified_at"),
+            "size": data.get("size"),
+            "parameters": data.get("details", {}).get("parameter_size"),
+        }

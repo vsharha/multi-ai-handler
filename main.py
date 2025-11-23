@@ -1,7 +1,25 @@
-from multi_ai_handler import request_ai
+from multi_ai_handler import request_ai, stream_ai, get_model_info, list_models
 
 def main():
-    print(request_ai(provider="ollama", model="gpt-oss", user_text="What's in the file", file="test/2024-10-31_aliexpress_02.pdf"))
+    print(request_ai(provider="google", model="gemini-2.5-pro", user_text="What's in the file", file="test/2024-10-31_aliexpress_02.pdf"))
+
+def stream_example():
+    for chunk in stream_ai(provider="cerebras", model="gpt-oss-120b", user_text="What's in the file", file="test/2024-10-31_aliexpress_02.pdf"):
+        print(chunk, end="", flush=True)
+    print()
+
+def model_info_example():
+    all_models = list_models()
+
+    provider = "anthropic"
+    models = all_models.get(provider, [])
+    print(f"Available {provider} models: {len(models)}")
+
+    if models:
+        model = models[0]
+        print(f"\nGetting info for: {model}")
+        info = get_model_info(provider, model)
+        print(info)
 
 if __name__ == "__main__":
-    main()
+    model_info_example()
