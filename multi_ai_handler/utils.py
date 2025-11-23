@@ -1,4 +1,17 @@
 import json
+from dataclasses import dataclass
+
+
+@dataclass
+class AIResponse:
+    content: str
+    history: list[dict] | None = None
+
+    def __str__(self) -> str:
+        return self.content
+
+    def __repr__(self) -> str:
+        return f"AIResponse(content='{self.content[:50]}...', history={len(self.history) if self.history else 0} messages)"
 
 
 def parse_ai_response(response_text: str) -> dict:

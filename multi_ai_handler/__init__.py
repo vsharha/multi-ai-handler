@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from multi_ai_handler.multi_ai_handler import AIProviderManager
-from multi_ai_handler.utils import parse_ai_response
+from multi_ai_handler.utils import AIResponse, parse_ai_response
 from multi_ai_handler.interface import (
     request_ai,
     stream_ai,
@@ -29,6 +29,7 @@ __all__ = [
     "arequest_ai",
     "astream_ai",
     "AIProviderManager",
+    "AIResponse",
     "parse_ai_response",
     "get_model_info",
     "list_models",

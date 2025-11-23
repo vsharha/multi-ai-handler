@@ -1,10 +1,10 @@
 from multi_ai_handler.ai_provider import AIProvider
-from multi_ai_handler.utils import parse_ai_response
+from multi_ai_handler.utils import AIResponse, parse_ai_response
 from pathlib import Path
 from typing import Iterator, AsyncIterator
 import requests
 
-from multi_ai_handler.generate_payload import generate_ollama_payload
+from multi_ai_handler.generate_payload import generate_ollama_payload, build_ollama_user_content
 
 try:
     import ollama
@@ -46,30 +46,36 @@ class OllamaProvider(AIProvider):
                 f"Ollama server responded with {resp.status_code} (server error)"
             )
 
-    def generate(self, system_prompt: str, user_text: str = None, file: str | Path | dict | None = None, model: str = None, temperature: float = 0.0, local: bool=False, json_output: bool=False) -> str | dict:
+    def generate(self, system_prompt: str, user_text: str = None, messages: list[dict] = None, file: str | Path | dict | None = None, model: str = None, temperature: float = 0.0, local: bool=False, json_output: bool=False) -> AIResponse:
         self._check_server()
 
-        messages: list = generate_ollama_payload(user_text, system_prompt, file)
+        payload: list = generate_ollama_payload(user_text, system_prompt, file, messages=messages)
 
         response = ollama.chat(
             model=model,
-            messages=messages,
+            messages=payload,
             options={"temperature": temperature},
         )
 
         response_text = response['message']['content']
-        if json_output:
-            return parse_ai_response(response_text)
-        return response_text
 
-    def stream(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False) -> Iterator[str]:
+        # Build history (without system message)
+        new_user_content = build_ollama_user_content(user_text, file)
+        history = list(messages) if messages else []
+        history.append({"role": "user", "content": new_user_content})
+        history.append({"role": "assistant", "content": response_text})
+
+        content = parse_ai_response(response_text) if json_output else response_text
+        return AIResponse(content=content, history=history)
+
+    def stream(self, system_prompt: str, user_text: str=None, messages: list[dict]=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False) -> Iterator[str]:
         self._check_server()
 
-        messages: list = generate_ollama_payload(user_text, system_prompt, file)
+        payload: list = generate_ollama_payload(user_text, system_prompt, file, messages=messages)
 
         stream = ollama.chat(
             model=model,
-            messages=messages,
+            messages=payload,
             options={"temperature": temperature},
             stream=True
         )
@@ -101,32 +107,38 @@ class OllamaProvider(AIProvider):
             "parameters": data.get("details", {}).get("parameter_size"),
         }
 
-    async def agenerate(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False, json_output: bool=False) -> str | dict:
+    async def agenerate(self, system_prompt: str, user_text: str=None, messages: list[dict]=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False, json_output: bool=False) -> AIResponse:
         self._check_server()
 
-        messages: list = generate_ollama_payload(user_text, system_prompt, file)
+        payload: list = generate_ollama_payload(user_text, system_prompt, file, messages=messages)
 
         async_client = AsyncClient(host=self.base_url)
         response = await async_client.chat(
             model=model,
-            messages=messages,
+            messages=payload,
             options={"temperature": temperature},
         )
 
         response_text = response['message']['content']
-        if json_output:
-            return parse_ai_response(response_text)
-        return response_text
 
-    async def astream(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False) -> AsyncIterator[str]:
+        # Build history (without system message)
+        new_user_content = build_ollama_user_content(user_text, file)
+        history = list(messages) if messages else []
+        history.append({"role": "user", "content": new_user_content})
+        history.append({"role": "assistant", "content": response_text})
+
+        content = parse_ai_response(response_text) if json_output else response_text
+        return AIResponse(content=content, history=history)
+
+    async def astream(self, system_prompt: str, user_text: str=None, messages: list[dict]=None, file: str | Path | dict | None=None, model: str=None, temperature: float=0.0, local: bool=False) -> AsyncIterator[str]:
         self._check_server()
 
-        messages: list = generate_ollama_payload(user_text, system_prompt, file)
+        payload: list = generate_ollama_payload(user_text, system_prompt, file, messages=messages)
 
         async_client = AsyncClient(host=self.base_url)
         stream = await async_client.chat(
             model=model,
-            messages=messages,
+            messages=payload,
             options={"temperature": temperature},
             stream=True
         )

@@ -34,17 +34,10 @@ def process_local_file(filename: str, encoded_data: str) -> str:
 """)
 
 
-def generate_openai_payload(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None, local: bool=False) -> list[dict[str, Any]]:
+def build_openai_user_content(user_text: str | None, file: str | Path | dict | None=None, local: bool=False) -> list[dict[str, Any]]:
+    """Build user message content for OpenAI format."""
     if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
-
-    messages = []
-
-    if system_prompt:
-        messages.append({
-            "role": "system",
-            "content": system_prompt
-        })
 
     content = []
 
@@ -60,7 +53,7 @@ def generate_openai_payload(user_text: str | None, system_prompt: str, file: str
         if local:
             content.append({
                 "type": "text",
-                "text": user_text + "\n" + process_local_file(filename, encoded_data)
+                "text": (user_text + "\n" if user_text else "") + process_local_file(filename, encoded_data)
             })
         else:
             mime_type, _ = mimetypes.guess_type(filename)
@@ -89,14 +82,38 @@ def generate_openai_payload(user_text: str | None, system_prompt: str, file: str
                     }
                 })
 
-    messages.append({
+    return content
+
+
+def generate_openai_payload(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None, local: bool=False, messages: list[dict] | None=None) -> list[dict[str, Any]]:
+    """Generate full message payload for OpenAI API.
+
+    If messages is provided, it should contain the conversation history (without system message).
+    The system message will be prepended, and the new user message will be appended.
+    """
+    result = []
+
+    if system_prompt:
+        result.append({
+            "role": "system",
+            "content": system_prompt
+        })
+
+    # Add previous conversation history
+    if messages:
+        result.extend(messages)
+
+    # Add new user message
+    content = build_openai_user_content(user_text, file, local)
+    result.append({
         "role": "user",
         "content": content
     })
 
-    return messages
+    return result
 
-def generate_google_payload(user_text: str | None, file: str | Path | dict | None=None, local: bool=False) -> list[dict[str, Any]]:
+def build_google_user_parts(user_text: str | None, file: str | Path | dict | None=None, local: bool=False) -> list[dict[str, Any]]:
+    """Build user message parts for Google format."""
     if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
 
@@ -110,7 +127,7 @@ def generate_google_payload(user_text: str | None, file: str | Path | dict | Non
 
         if local:
             parts.append({
-                "text": user_text + "\n" + process_local_file(filename, encoded_data) if user_text else process_local_file(filename, encoded_data)
+                "text": (user_text + "\n" if user_text else "") + process_local_file(filename, encoded_data)
             })
         else:
             if user_text:
@@ -129,7 +146,30 @@ def generate_google_payload(user_text: str | None, file: str | Path | dict | Non
 
     return parts
 
-def generate_claude_payload(user_text: str | None, file: str | Path | dict | None=None, local: bool=False) -> list[dict[str, Any]]:
+
+def generate_google_payload(user_text: str | None, file: str | Path | dict | None=None, local: bool=False, messages: list[dict] | None=None) -> list[dict[str, Any]]:
+    """Generate full contents payload for Google API.
+
+    If messages is provided, it should contain the conversation history.
+    Format: [{"role": "user", "parts": [...]}, {"role": "model", "parts": [...]}]
+    """
+    contents = []
+
+    # Add previous conversation history
+    if messages:
+        contents.extend(messages)
+
+    # Add new user message
+    parts = build_google_user_parts(user_text, file, local)
+    contents.append({
+        "role": "user",
+        "parts": parts
+    })
+
+    return contents
+
+def build_claude_user_content(user_text: str | None, file: str | Path | dict | None=None, local: bool=False) -> list[dict[str, Any]]:
+    """Build user message content for Claude format."""
     if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
 
@@ -147,7 +187,7 @@ def generate_claude_payload(user_text: str | None, file: str | Path | dict | Non
         if local:
             content.append({
                 "type": "text",
-                "text": user_text + "\n" + process_local_file(filename, encoded_data)
+                "text": (user_text + "\n" if user_text else "") + process_local_file(filename, encoded_data)
             })
         else:
             mime_type, _ = mimetypes.guess_type(filename)
@@ -174,26 +214,34 @@ def generate_claude_payload(user_text: str | None, file: str | Path | dict | Non
                 }
             })
 
-    messages = [
-        {
-            "role": "user",
-            "content": content
-        }
-    ]
+    return content
 
-    return messages
 
-def generate_ollama_payload(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None) -> list[dict[str, Any]]:
+def generate_claude_payload(user_text: str | None, file: str | Path | dict | None=None, local: bool=False, messages: list[dict] | None=None) -> list[dict[str, Any]]:
+    """Generate full messages payload for Claude API.
+
+    If messages is provided, it should contain the conversation history.
+    Format: [{"role": "user", "content": [...]}, {"role": "assistant", "content": "..."}]
+    """
+    result = []
+
+    # Add previous conversation history
+    if messages:
+        result.extend(messages)
+
+    # Add new user message
+    content = build_claude_user_content(user_text, file, local)
+    result.append({
+        "role": "user",
+        "content": content
+    })
+
+    return result
+
+def build_ollama_user_content(user_text: str | None, file: str | Path | dict | None=None) -> str:
+    """Build user message content for Ollama format (plain text)."""
     if not file and not user_text:
         raise ValueError("Either filename or user_text must be provided.")
-
-    messages = []
-
-    if system_prompt:
-        messages.append({
-            "role": "system",
-            "content": system_prompt
-        })
 
     content = []
 
@@ -203,11 +251,32 @@ def generate_ollama_payload(user_text: str | None, system_prompt: str, file: str
         filename, encoded_data = _process_file(file)
         content.append(process_local_file(filename, encoded_data))
 
-    user_message = {
+    return "\n".join(content) if content else ""
+
+
+def generate_ollama_payload(user_text: str | None, system_prompt: str, file: str | Path | dict | None=None, messages: list[dict] | None=None) -> list[dict[str, Any]]:
+    """Generate full messages payload for Ollama API.
+
+    If messages is provided, it should contain the conversation history (without system message).
+    Format: [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]
+    """
+    result = []
+
+    if system_prompt:
+        result.append({
+            "role": "system",
+            "content": system_prompt
+        })
+
+    # Add previous conversation history
+    if messages:
+        result.extend(messages)
+
+    # Add new user message
+    content = build_ollama_user_content(user_text, file)
+    result.append({
         "role": "user",
-        "content": "\n".join(content) if content else ""
-    }
+        "content": content
+    })
 
-    messages.append(user_message)
-
-    return messages
+    return result

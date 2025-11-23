@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Iterator, AsyncIterator
 
 from multi_ai_handler.multi_ai_handler import AIProviderManager
+from multi_ai_handler.utils import AIResponse
 
 _handler = AIProviderManager()
 
@@ -10,16 +11,18 @@ def request_ai(
     model: str | None = None,
     system_prompt: str | None = None,
     user_text: str | None = None,
+    messages: list[dict] | None = None,
     file: str | Path | dict | None = None,
     temperature: float = 0.2,
     json_output: bool = False,
     local: bool = False,
-) -> dict | str:
+) -> AIResponse:
     return _handler.generate(
         provider=provider,
         model=model,
         system_prompt=system_prompt,
         user_text=user_text,
+        messages=messages,
         file=file,
         temperature=temperature,
         json_output=json_output,
@@ -31,6 +34,7 @@ def stream_ai(
     model: str | None = None,
     system_prompt: str | None = None,
     user_text: str | None = None,
+    messages: list[dict] | None = None,
     file: str | Path | dict | None = None,
     temperature: float = 0.2,
     local: bool = False,
@@ -40,6 +44,7 @@ def stream_ai(
         model=model,
         system_prompt=system_prompt,
         user_text=user_text,
+        messages=messages,
         file=file,
         temperature=temperature,
         local=local,
@@ -56,16 +61,18 @@ async def arequest_ai(
     model: str | None = None,
     system_prompt: str | None = None,
     user_text: str | None = None,
+    messages: list[dict] | None = None,
     file: str | Path | dict | None = None,
     temperature: float = 0.2,
     json_output: bool = False,
     local: bool = False,
-) -> dict | str:
+) -> AIResponse:
     return await _handler.agenerate(
         provider=provider,
         model=model,
         system_prompt=system_prompt,
         user_text=user_text,
+        messages=messages,
         file=file,
         temperature=temperature,
         json_output=json_output,
@@ -77,6 +84,7 @@ async def astream_ai(
     model: str | None = None,
     system_prompt: str | None = None,
     user_text: str | None = None,
+    messages: list[dict] | None = None,
     file: str | Path | dict | None = None,
     temperature: float = 0.2,
     local: bool = False,
@@ -86,6 +94,7 @@ async def astream_ai(
         model=model,
         system_prompt=system_prompt,
         user_text=user_text,
+        messages=messages,
         file=file,
         temperature=temperature,
         local=local,
