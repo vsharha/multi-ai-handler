@@ -1,5 +1,4 @@
-import asyncio
-from multi_ai_handler import request_ai, stream_ai, get_model_info, list_models, arequest_ai, astream_ai, AIProviderManager
+from multi_ai_handler import request_ai, stream_ai, get_model_info, list_models, AIProviderManager
 
 def main():
     print(request_ai(provider="google", model="gemini-2.5-pro", user_text="What's in the file", file="test/2024-10-31_aliexpress_02.pdf"))
@@ -22,67 +21,24 @@ def model_info_example():
         info = get_model_info(provider, model)
         print(info)
 
-async def async_example():
-    response = await arequest_ai(provider="google", model="gemini-2.0-flash", user_text="Write a haiku about async programming")
-    print(response)
-
-async def async_stream_example():
-    async for chunk in astream_ai(provider="cerebras", model="gpt-oss-120b", user_text="Write 20 haikus about async programming"):
-        print(chunk, end="", flush=True)
-    print()
-
-def chat_history_example():
-    """Example demonstrating multi-turn conversation with history."""
-    # First turn
-    response1 = request_ai(
-        provider="google",
-        model="gemini-2.0-flash",
-        system_prompt="You are a helpful assistant. Be concise.",
-        user_text="My name is Alice. What's 2+2?"
-    )
-    print(f"Turn 1: {response1.content}")
-    print(f"History length: {len(response1.history)} messages")
-
-    # Second turn - uses history from first response
-    response2 = request_ai(
-        provider="google",
-        model="gemini-2.0-flash",
-        system_prompt="You are a helpful assistant. Be concise.",
-        user_text="What's my name?",
-        messages=response1.history
-    )
-    print(f"\nTurn 2: {response2.content}")
-    print(f"History length: {len(response2.history)} messages")
-
-    # Third turn
-    response3 = request_ai(
-        provider="google",
-        model="gemini-2.0-flash",
-        system_prompt="You are a helpful assistant. Be concise.",
-        user_text="What was the math question I asked?",
-        messages=response2.history
-    )
-    print(f"\nTurn 3: {response3.content}")
-    print(f"History length: {len(response3.history)} messages")
-
-def conversation_example():
+def file_conversation_example():
     manager = AIProviderManager()
     conv = manager.conversation(
-        provider="google",
-        model="gemini-2.0-flash",
-        system_prompt="You are a helpful assistant. Be concise.",
+        provider="ollama",
+        model="gpt-oss",
+        system_prompt="You are a helpful assistant that analyzes documents.",
     )
 
-    response = conv.send("My name is Alice. What's 2+2?")
-    print(f"Turn 1: {response.content}")
+    response = conv.send("Summarize this document", file="test/2024-10-31_aliexpress_02.pdf")
+    print(f"Summary: {response.content}\n")
 
-    response = conv.send("What's my name?")
-    print(f"Turn 2: {response.content}")
+    response = conv.send("What is the total amount?")
+    print(f"Total: {response.content}\n")
 
-    response = conv.send("What was the math question I asked?")
-    print(f"Turn 3: {response.content}")
+    response = conv.send("List all the items")
+    print(f"Items: {response.content}\n")
 
-    print(f"\nConversation: {conv}")
+    print(f"Conversation: {conv}")
 
 if __name__ == "__main__":
-    conversation_example()
+    file_conversation_example()
