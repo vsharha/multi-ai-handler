@@ -59,7 +59,6 @@ pip install multi-ai-handler[all]
 - `ollama` - Local LLM support via Ollama
 - `docling` - Advanced document processing (OCR, table extraction) with EasyOCR
 - `local` - Both ollama and docling for complete local setup
-- `extra` - Cerebras cloud inference support
 - `all` - All optional dependencies
 
 ## Setup
@@ -71,7 +70,7 @@ Create a `.env` file in your project root with your API keys:
 ```env
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 CEREBRAS_API_KEY=your_cerebras_api_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
 OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
@@ -93,35 +92,46 @@ The `request_ai()` function provides a unified interface across all providers wi
 ```python
 from multi_ai_handler import request_ai
 
-# Uses default provider (Google Gemini)
 response = request_ai(
+    provider="google",
+    model="gemini-2.5-flash",
     system_prompt="You are a helpful assistant.",
     user_text="What is the capital of France?"
 )
 print(response)
 ```
 
-#### Specify a provider and model
+#### Using different providers
 
 ```python
-# Provider specified as string
+# Anthropic Claude
 response = request_ai(
-    system_prompt="You are a data extraction expert.",
-    user_text="Extract key information from: John Doe, age 30, lives in NYC",
     provider="anthropic",
-    model="claude-sonnet-4-5-20250929"
+    model="claude-sonnet-4-5-20250929",
+    system_prompt="You are a data extraction expert.",
+    user_text="Extract key information from: John Doe, age 30, lives in NYC"
+)
+
+# OpenAI
+response = request_ai(
+    provider="openai",
+    model="gpt-4o",
+    system_prompt="You are helpful.",
+    user_text="Hello!"
 )
 ```
 
 Supported providers: `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, `"cerebras"`, `"ollama"`
 
-*Requires optional dependencies: `pip install multi-ai-handler[extra]` for Cerebras, `pip install multi-ai-handler[ollama]` for Ollama
+*Ollama requires: `pip install multi-ai-handler[ollama]`
 
 #### JSON output parsing
 
 ```python
 # Automatically parses JSON from response
 data = request_ai(
+    provider="google",
+    model="gemini-2.5-flash",
     system_prompt="You are a JSON formatter. Return valid JSON only.",
     user_text="Convert to JSON: Name: Alice, Age: 25, City: London",
     json_output=True
@@ -134,25 +144,37 @@ print(data)  # Returns parsed dict: {'name': 'Alice', 'age': 25, 'city': 'London
 ```python
 # With images
 response = request_ai(
+    provider="google",
+    model="gemini-2.5-flash",
     system_prompt="You are an image analysis expert.",
     user_text="Describe what you see in this image.",
-    file="image.jpg",
-    provider="google"
+    file="image.jpg"
 )
 
 # With documents
 response = request_ai(
+    provider="anthropic",
+    model="claude-sonnet-4-5-20250929",
     system_prompt="Summarize this document.",
-    file="document.pdf",
-    provider="anthropic"
+    file="document.pdf"
 )
 
 # Using pathlib.Path
 from pathlib import Path
 response = request_ai(
+    provider="anthropic",
+    model="claude-sonnet-4-5-20250929",
     system_prompt="Analyze this document.",
-    file=Path("documents/report.pdf"),
-    provider="anthropic"
+    file=Path("documents/report.pdf")
+)
+
+# Local file processing (text extraction instead of native file upload)
+response = request_ai(
+    provider="openai",
+    model="gpt-4o",
+    system_prompt="Summarize this document.",
+    file="document.pdf",
+    local=True  # Extracts text using Docling instead of uploading file
 )
 ```
 
@@ -161,77 +183,85 @@ response = request_ai(
 ```python
 # Requires: pip install multi-ai-handler[ollama]
 response = request_ai(
-    system_prompt="You are a helpful assistant.",
-    user_text="What is the capital of France?",
     provider="ollama",
-    model="llama3.2"
+    model="llama3.2",
+    system_prompt="You are a helpful assistant.",
+    user_text="What is the capital of France?"
 )
 ```
 
-### Using Provider-Specific Functions
+### Using AIProviderManager
 
-For direct access to provider-specific features, you can use individual functions. All provider functions share the same parameter structure:
+For more control, use the `AIProviderManager` class directly. This allows you to register custom providers and manage the provider lifecycle.
+
+```python
+from multi_ai_handler import AIProviderManager
+
+manager = AIProviderManager()
+
+# Generate a response
+response = manager.generate(
+    provider="anthropic",
+    model="claude-sonnet-4-5-20250929",
+    system_prompt="You are a helpful assistant.",
+    user_text="What is the capital of France?"
+)
+
+# List available models from all providers
+models = manager.list_models()
+print(models)  # {'google': ['gemini-2.5-pro', ...], 'anthropic': [...], ...}
+```
+
+#### Registering Custom Providers
+
+You can register custom providers that implement the `AIProvider` interface:
+
+```python
+from multi_ai_handler import AIProviderManager
+from multi_ai_handler.ai_provider import AIProvider
+
+class MyCustomProvider(AIProvider):
+    def generate(self, system_prompt, user_text=None, file=None, model=None, temperature=0.0, local=False):
+        # Your implementation here
+        return "response"
+
+    def list_models(self):
+        return ["model-1", "model-2"]
+
+manager = AIProviderManager()
+manager.register_provider("custom", MyCustomProvider)
+
+response = manager.generate(
+    provider="custom",
+    model="model-1",
+    user_text="Hello!"
+)
+```
+
+### Using Provider Classes Directly
+
+For advanced use cases, you can instantiate provider classes directly:
 
 ```python
 from multi_ai_handler import (
-    request_anthropic,
-    request_cerebras,
-    request_google,
-    request_openai,
-    request_openrouter,
-    request_ollama
+    AnthropicProvider,
+    GoogleProvider,
+    OpenAIProvider,
+    OpenrouterProvider,
+    OllamaProvider,
+    CerebrasProvider
 )
-```
 
-#### Examples
-
-**Anthropic Claude** (with streaming support):
-```python
-response = request_anthropic(
-    system_prompt="You are a helpful assistant.",
-    user_text="What is the capital of France?",
-    model="claude-3-5-sonnet-20241022",
-    temperature=0.7
-)
-```
-
-**Google Gemini** (with token usage reporting):
-```python
-response = request_google(
-    system_prompt="Analyze this image.",
-    file="image.jpg",
-    model="gemini-1.5-flash"
-)
-```
-
-**OpenAI** (with custom endpoint support):
-```python
-response = request_openai(
+# Direct provider usage
+anthropic = AnthropicProvider()
+response = anthropic.generate(
     system_prompt="You are helpful.",
     user_text="Hello!",
-    model="gpt-4",
-    link="https://custom-endpoint.com"  # Optional custom base URL
+    model="claude-sonnet-4-5-20250929"
 )
-```
 
-**Ollama** (with local document processing):
-```python
-# Requires: pip install multi-ai-handler[local]
-response = request_ollama(
-    system_prompt="Summarize this document.",
-    file="document.pdf",  # Uses Docling for OCR and table extraction
-    model="llama3.2"
-)
-```
-
-**Cerebras** (high-performance cloud inference):
-```python
-# Requires: pip install multi-ai-handler[extra]
-response = request_cerebras(
-    system_prompt="You are a helpful assistant.",
-    user_text="Explain quantum computing.",
-    model="qwen-3-235b-a22b-instruct-2507"
-)
+# List models from a specific provider
+models = anthropic.list_models()
 ```
 
 ## API Reference
@@ -242,26 +272,28 @@ response = request_cerebras(
 
 ```python
 def request_ai(
-    system_prompt: str,
+    provider: str,
+    model: str,
+    system_prompt: str = None,
     user_text: str = None,
     file: str | Path | dict = None,
-    provider: str = None,
-    model: str = None,
     temperature: float = 0.2,
-    json_output: bool = False
+    json_output: bool = False,
+    local: bool = False
 ) -> str | dict
 ```
 
 **Parameters:**
-- `system_prompt` (str, required): The system instruction for the AI model
+- `provider` (str, required): Provider name - `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, `"cerebras"`, or `"ollama"`
+- `model` (str, required): Model to use (e.g., `"gemini-2.5-flash"`, `"claude-sonnet-4-5-20250929"`)
+- `system_prompt` (str, optional): The system instruction for the AI model
 - `user_text` (str, optional): The user's text input
 - `file` (str | Path | dict, optional): File to process. Can be:
   - **File path**: `"image.jpg"` or `Path("image.jpg")` - automatically reads and encodes
   - **Dict**: `{"filename": "image.jpg", "encoded_data": "base64..."}` - for pre-encoded data
-- `provider` (str, optional): Provider name - `"google"`, `"anthropic"`, `"openai"`, `"openrouter"`, or `"ollama"`. Defaults to `"google"`
-- `model` (str, optional): Model to use. Defaults to first supported model for the provider
 - `temperature` (float, optional): Controls randomness (0.0 = deterministic, 1.0 = creative). Default: 0.2
 - `json_output` (bool, optional): If True, parses and returns JSON as dict. Default: False
+- `local` (bool, optional): If True, extracts file text locally using Docling instead of uploading. Default: False
 
 **Returns:**
 - `str` if `json_output=False`
@@ -271,136 +303,64 @@ def request_ai(
 
 ---
 
-### Direct Provider Functions
+### `AIProviderManager` Class
 
-For advanced use cases requiring specific provider features, use these functions directly.
-
-#### Common Parameters
-
-All direct provider functions share these parameters:
-
-- `system_prompt` (str, required): The system instruction for the AI model
-- `user_text` (str, optional): The user's text input
-- `file` (str | Path | dict, optional): File to process (formats same as above)
-- `model` (str, required): The specific model to use
-- `temperature` (float, optional): Controls randomness. Default: 0.0
-
-**Note**: Either `user_text` or `file` must be provided.
-
-### `request_anthropic()`
-
-Makes a request to Anthropic's Claude API with streaming support.
+The main class for managing AI providers.
 
 ```python
-def request_anthropic(
-    system_prompt: str,
-    user_text: str = None,
-    file: str | Path | dict = None,
-    model: str = None,
-    temperature: float = 0.0
-) -> str
+class AIProviderManager:
+    def __init__(self)
+
+    def register_provider(self, name: str, provider: type[AIProvider]) -> None
+        """Register a custom provider class."""
+
+    def generate(
+        self,
+        provider: str,
+        model: str,
+        system_prompt: str = None,
+        user_text: str = None,
+        file: str | Path | dict = None,
+        temperature: float = 0.2,
+        local: bool = False,
+        json_output: bool = False
+    ) -> str | dict
+        """Generate a response from the specified provider."""
+
+    def list_models(self) -> dict[str, list[str]]
+        """List available models from all registered providers."""
 ```
 
-**Supported file types**: Images (PNG, JPEG, GIF, WebP), Documents (PDF, DOCX, TXT, etc.)
+---
 
-### `request_google()`
+### Provider Classes
 
-Makes a request to Google's Gemini API with token usage reporting.
+All provider classes implement the `AIProvider` interface:
 
 ```python
-def request_google(
-    system_prompt: str,
-    user_text: str = None,
-    file: str | Path | dict = None,
-    model: str = None,
-    temperature: float = 0.0
-) -> str
+class AIProvider(ABC):
+    @abstractmethod
+    def generate(
+        self,
+        system_prompt: str,
+        user_text: str = None,
+        file: str | Path | dict = None,
+        model: str = None,
+        temperature: float = 0.0,
+        local: bool = False
+    ) -> str
+
+    @abstractmethod
+    def list_models(self) -> list[str]
 ```
 
-**Supported file types**: Images, videos, audio, documents
-
-**Note**: Prints token usage (prompt, output, and total tokens) to console.
-
-### `request_openai()`
-
-Makes a request to OpenAI's API.
-
-```python
-def request_openai(
-    system_prompt: str,
-    user_text: str = None,
-    file: str | Path | dict = None,
-    model: str = None,
-    temperature: float = 0.0,
-    link: str = None
-) -> str
-```
-
-**Supported file types**: Images (PNG, JPEG, GIF, WebP), PDFs (via file API)
-
-**Additional parameter**:
-- `link` (str, optional): Custom base URL for API endpoint
-
-### `request_openrouter()`
-
-Makes a request through OpenRouter's unified API.
-
-```python
-def request_openrouter(
-    system_prompt: str,
-    user_text: str = None,
-    file: str | Path | dict = None,
-    model: str = None,
-    temperature: float = 0.0
-) -> str
-```
-
-Uses OpenAI-compatible format. Requires `OPENROUTER_API_KEY` in environment.
-
-### `request_ollama()`
-
-Makes a request to a local Ollama instance for running LLMs locally.
-
-```python
-def request_ollama(
-    system_prompt: str,
-    user_text: str = None,
-    file: str | Path | dict = None,
-    model: str = None,
-    temperature: float = 0.0
-) -> str
-```
-
-**Requirements:**
-- Install with: `pip install multi-ai-handler[ollama]`
-- For document processing: `pip install multi-ai-handler[local]`
-- Ollama must be running locally
-
-**Supported file types**: Documents (PDF, DOCX, etc.) via Docling extraction
-
-**Note**: File processing extracts text using Docling (OCR, table extraction) and includes it in the prompt.
-
-### `request_cerebras()`
-
-Makes a request to Cerebras cloud inference API for high-performance model inference.
-
-```python
-def request_cerebras(
-    system_prompt: str,
-    user_text: str = None,
-    file: str | Path | dict = None,
-    model: str = None,
-    temperature: float = 0.0
-) -> str
-```
-
-**Requirements:**
-- Install with: `pip install multi-ai-handler[extra]`
-- Requires `CEREBRAS_API_KEY` environment variable
-
-**Supported models**: `gpt-oss-120b`, `qwen-3-235b-a22b-instruct-2507`
-
-**Note**: File processing extracts text using Docling and includes it in the prompt (same as Ollama).
+**Available providers:**
+- `AnthropicProvider` - Anthropic Claude API (streaming support)
+- `GoogleProvider` - Google Gemini API
+- `OpenAIProvider` - OpenAI API (supports custom base_url)
+- `OpenrouterProvider` - OpenRouter API
+- `OllamaProvider` - Local Ollama instance
+- `CerebrasProvider` - Cerebras cloud inference
 
 ---
 
@@ -437,10 +397,10 @@ from multi_ai_handler import request_ai
 
 try:
     response = request_ai(
-        system_prompt="You are helpful.",
-        file="document.pdf",
         provider="anthropic",
-        model="claude-3-5-sonnet-20241022"
+        model="claude-sonnet-4-5-20250929",
+        system_prompt="You are helpful.",
+        file="document.pdf"
     )
 except FileNotFoundError as e:
     print(f"File not found: {e}")
