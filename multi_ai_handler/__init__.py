@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from multi_ai_handler.multi_ai_handler import (
     request_ai,
     MultiAIHandler,
