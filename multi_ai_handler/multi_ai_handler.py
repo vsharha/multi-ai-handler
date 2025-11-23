@@ -1,8 +1,11 @@
 from pathlib import Path
-from typing import Iterator, AsyncIterator
+from typing import Iterator, AsyncIterator, TYPE_CHECKING
 
 from multi_ai_handler.ai_provider import AIProvider
 from multi_ai_handler.utils import AIResponse
+
+if TYPE_CHECKING:
+    from multi_ai_handler.utils import Conversation
 from multi_ai_handler.providers.openrouter import OpenrouterProvider
 from multi_ai_handler.providers.anthropic import AnthropicProvider
 from multi_ai_handler.providers.cerebras import CerebrasProvider
@@ -67,3 +70,15 @@ class AIProviderManager:
 
         async for chunk in client.astream(system_prompt, user_text, messages, file, model, temperature, local=local):
             yield chunk
+
+    def conversation(self, provider: str, model: str, system_prompt: str | None = None, temperature: float = 0.2, local: bool = False) -> "Conversation":
+        from multi_ai_handler.utils import Conversation
+        Provider = self.providers[provider]
+        client = Provider()
+        return Conversation(
+            handler=client,
+            model=model,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            local=local,
+        )

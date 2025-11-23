@@ -1,5 +1,5 @@
 import asyncio
-from multi_ai_handler import request_ai, stream_ai, get_model_info, list_models, arequest_ai, astream_ai
+from multi_ai_handler import request_ai, stream_ai, get_model_info, list_models, arequest_ai, astream_ai, AIProviderManager
 
 def main():
     print(request_ai(provider="google", model="gemini-2.5-pro", user_text="What's in the file", file="test/2024-10-31_aliexpress_02.pdf"))
@@ -65,5 +65,24 @@ def chat_history_example():
     print(f"\nTurn 3: {response3.content}")
     print(f"History length: {len(response3.history)} messages")
 
+def conversation_example():
+    manager = AIProviderManager()
+    conv = manager.conversation(
+        provider="google",
+        model="gemini-2.0-flash",
+        system_prompt="You are a helpful assistant. Be concise.",
+    )
+
+    response = conv.send("My name is Alice. What's 2+2?")
+    print(f"Turn 1: {response.content}")
+
+    response = conv.send("What's my name?")
+    print(f"Turn 2: {response.content}")
+
+    response = conv.send("What was the math question I asked?")
+    print(f"Turn 3: {response.content}")
+
+    print(f"\nConversation: {conv}")
+
 if __name__ == "__main__":
-    chat_history_example()
+    conversation_example()
