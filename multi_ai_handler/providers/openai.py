@@ -1,4 +1,6 @@
 from openai import OpenAI
+from openai.pagination import SyncPage
+
 from multi_ai_handler.ai_provider import AIProvider
 import os
 from pathlib import Path
@@ -6,7 +8,7 @@ from pathlib import Path
 from multi_ai_handler.generate_payload import generate_openai_payload
 
 class OpenAIProvider(AIProvider):
-    def __init__(self, base_url: str | None, api_key: str | None=None) -> None:
+    def __init__(self, base_url: str | None=None, api_key: str | None=None) -> None:
         super().__init__()
         if api_key is None:
             api_key = os.getenv("OPENAI_API_KEY")
@@ -25,3 +27,6 @@ class OpenAIProvider(AIProvider):
         )
 
         return completion.choices[0].message.content
+
+    def list_models(self) -> SyncPage:
+        return self.client.models.list()

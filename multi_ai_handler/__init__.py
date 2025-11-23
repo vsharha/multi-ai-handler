@@ -6,7 +6,6 @@ from multi_ai_handler.multi_ai_handler import (
     request_ai,
     MultiAIHandler,
     parse_ai_response,
-    Providers,
 )
 
 from multi_ai_handler.providers.anthropic import AnthropicProvider
@@ -21,7 +20,6 @@ __all__ = [
     "request_ai",
     "MultiAIHandler",
     "parse_ai_response",
-    "Providers",
     # Provider-specific classes
     "AnthropicProvider",
     "CerebrasProvider",

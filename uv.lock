@@ -1029,6 +1029,7 @@ dependencies = [
     { name = "openai" },
     { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "requests" },
 ]
 
 [package.optional-dependencies]
@@ -1072,6 +1073,7 @@ requires-dist = [
     { name = "openai", specifier = ">=2.7.1" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-dotenv", specifier = ">=0.19.0" },
+    { name = "requests", specifier = ">=2.32.5" },
 ]
 provides-extras = ["ollama", "docling", "local", "extra", "all"]
 

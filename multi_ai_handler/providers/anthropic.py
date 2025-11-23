@@ -1,4 +1,6 @@
 from anthropic import Anthropic
+from anthropic.pagination import SyncPage
+
 from multi_ai_handler.ai_provider import AIProvider
 from pathlib import Path
 
@@ -16,13 +18,16 @@ class AnthropicProvider(AIProvider):
         response: str = ""
 
         with self.client.messages.stream(
-                model=model,
-                max_tokens=20000,
-                temperature=temperature,
-                system=system_prompt,
-                messages=messages
+            model=model,
+            max_tokens=20000,
+            temperature=temperature,
+            system=system_prompt,
+            messages=messages
         ) as stream:
             for text in stream.text_stream:
                 response += text
 
         return response
+
+    def list_models(self) -> SyncPage:
+        return self.client.models.list()
