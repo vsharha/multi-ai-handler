@@ -2,10 +2,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from multi_ai_handler.multi_ai_handler import (
+from multi_ai_handler.multi_ai_handler import AIProviderManager, parse_ai_response
+from multi_ai_handler.interface import (
     request_ai,
-    AIProviderManager,
-    parse_ai_response,
     stream_ai,
     get_model_info,
     list_models,
