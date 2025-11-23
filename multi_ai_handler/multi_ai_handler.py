@@ -3,12 +3,12 @@ from pathlib import Path
 
 from enum import Enum, auto
 
-from multi_ai_handler import OpenrouterProvider
-from multi_ai_handler import AnthropicProvider
-from multi_ai_handler import CerebrasProvider
-from multi_ai_handler import GoogleProvider
-from multi_ai_handler import OllamaProvider
-from multi_ai_handler import OpenAIProvider
+from multi_ai_handler.providers.openrouter import OpenrouterProvider
+from multi_ai_handler.providers.anthropic import AnthropicProvider
+from multi_ai_handler.providers.cerebras import CerebrasProvider
+from multi_ai_handler.providers.google import GoogleProvider
+from multi_ai_handler.providers.ollama import OllamaProvider
+from multi_ai_handler.providers.openai import OpenAIProvider
 
 class LowercaseEnum(str, Enum):
     def _generate_next_value_(self, start, count, last_values):
