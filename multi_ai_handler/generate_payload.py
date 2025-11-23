@@ -117,23 +117,18 @@ def generate_claude_payload(user_text: str | None, file: str | Path | dict | Non
             raise ValueError("Could not detect MIME type from filename.")
 
         if mime_type.startswith("image/"):
-            content.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": mime_type,
-                    "data": encoded_data
-                }
-            })
+            content_type = "image"
         else:
-            content.append({
-                "type": "document",
-                "source": {
-                    "type": "base64",
-                    "media_type": mime_type,
-                    "data": encoded_data
-                }
-            })
+            content_type = "document"
+
+        content.append({
+            "type": content_type,
+            "source": {
+                "type": "base64",
+                "media_type": mime_type,
+                "data": encoded_data
+            }
+        })
 
     messages = [
         {
