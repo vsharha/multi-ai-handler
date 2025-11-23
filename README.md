@@ -57,8 +57,8 @@ response = request_ai(
 
 ```python
 data = request_ai(
-    provider="google",
-    model="gemini-2.5-flash",
+    provider="openai",
+    model="gpt-4o-mini",
     system_prompt="Return valid JSON only.",
     user_text="Convert to JSON: Name: Alice, Age: 25",
     json_output=True
@@ -82,7 +82,7 @@ response = request_ai(
 ```python
 from multi_ai_handler import stream_ai
 
-for chunk in stream_ai(provider="google", model="gemini-2.0-flash", user_text="Write a poem"):
+for chunk in stream_ai(provider="cerebras", model="llama-3.3-70b", user_text="Write a poem"):
     print(chunk, end="", flush=True)
 ```
 
@@ -100,7 +100,7 @@ async def main():
     )
 
     # Async streaming
-    async for chunk in astream_ai(provider="google", model="gemini-2.0-flash", user_text="Hi"):
+    async for chunk in astream_ai(provider="openai", model="gpt-4o-mini", user_text="Hi"):
         print(chunk, end="", flush=True)
 
 asyncio.run(main())
@@ -115,8 +115,8 @@ from multi_ai_handler import AIProviderManager
 
 manager = AIProviderManager()
 conv = manager.conversation(
-    provider="google",
-    model="gemini-2.0-flash",
+    provider="anthropic",
+    model="claude-sonnet-4-20250514",
     system_prompt="You are a helpful assistant.",
 )
 
@@ -147,7 +147,7 @@ print(response.content)
 from multi_ai_handler import list_models, get_model_info
 
 all_models = list_models()  # {'google': [...], 'anthropic': [...], ...}
-info = get_model_info(provider="google", model="models/gemini-2.0-flash")
+info = get_model_info(provider="anthropic", model="claude-sonnet-4-20250514")
 ```
 
 ## API Reference
