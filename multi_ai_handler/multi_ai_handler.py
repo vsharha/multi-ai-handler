@@ -10,7 +10,7 @@ from multi_ai_handler.providers.ollama import OllamaProvider
 from multi_ai_handler.providers.openai import OpenAIProvider
 
 
-class MultiAIHandler:
+class AIProviderManager:
     def __init__(self):
         self.providers: dict[str, type[AIProvider]] = {
             "google": GoogleProvider,
@@ -24,7 +24,7 @@ class MultiAIHandler:
     def register_provider(self, name: str, provider: type[AIProvider]) -> None:
         self.providers[name] = provider
 
-    def request_ai(self, provider: str, model:str, system_prompt: str | None=None, user_text: str=None, file: str | Path | dict | None=None, temperature: float=0.2, local:bool=False, json_output: bool = False) -> dict | str:
+    def generate(self, provider: str, model:str, system_prompt: str | None=None, user_text: str=None, file: str | Path | dict | None=None, temperature: float=0.2, local:bool=False, json_output: bool = False) -> dict | str:
         Provider = self.providers[provider]
         client = Provider()
 
@@ -48,7 +48,7 @@ class MultiAIHandler:
 
         return models
 
-_handler = MultiAIHandler()
+_handler = AIProviderManager()
 
 def request_ai(
     provider: str | None = None,
@@ -60,7 +60,7 @@ def request_ai(
     json_output: bool = False,
     local: bool = False,
 ) -> dict | str:
-    return _handler.request_ai(
+    return _handler.generate(
         provider=provider,
         model=model,
         system_prompt=system_prompt,

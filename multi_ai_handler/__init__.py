@@ -4,7 +4,7 @@ load_dotenv()
 
 from multi_ai_handler.multi_ai_handler import (
     request_ai,
-    MultiAIHandler,
+    AIProviderManager,
     parse_ai_response,
 )
 
@@ -18,7 +18,7 @@ from multi_ai_handler.providers.openrouter import OpenrouterProvider
 __all__ = [
     # Main unified interface
     "request_ai",
-    "MultiAIHandler",
+    "AIProviderManager",
     "parse_ai_response",
     # Provider-specific classes
     "AnthropicProvider",
