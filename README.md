@@ -5,11 +5,14 @@ A unified Python library for interacting with multiple AI providers through a co
 ## Features
 
 - Unified interface for multiple AI providers
+- **Streaming support** for real-time token output
+- **Async support** for concurrent workloads
 - Support for text-only, file-only, or combined text and file inputs
 - Automatic payload formatting for each provider's API requirements
 - Support for images and documents (PDF)
 - Local LLM support with Ollama
 - Advanced document processing with Docling (OCR, table extraction)
+- Model information retrieval
 - Environment-based API key management
 - Optional dependencies for lightweight installations
 
@@ -189,6 +192,87 @@ response = request_ai(
 )
 ```
 
+### Streaming Responses
+
+Stream tokens in real-time as they are generated:
+
+```python
+from multi_ai_handler import stream_ai
+
+for chunk in stream_ai(
+    provider="google",
+    model="gemini-2.0-flash",
+    user_text="Write a short poem about coding"
+):
+    print(chunk, end="", flush=True)
+print()  # Newline at end
+```
+
+### Async Support
+
+Use async/await for concurrent operations:
+
+```python
+import asyncio
+from multi_ai_handler import arequest_ai, astream_ai
+
+async def main():
+    # Async generation
+    response = await arequest_ai(
+        provider="anthropic",
+        model="claude-sonnet-4-20250514",
+        user_text="Hello!"
+    )
+    print(response)
+
+    # Async streaming
+    async for chunk in astream_ai(
+        provider="google",
+        model="gemini-2.0-flash",
+        user_text="Write a haiku"
+    ):
+        print(chunk, end="", flush=True)
+
+asyncio.run(main())
+```
+
+#### Concurrent requests
+
+```python
+import asyncio
+from multi_ai_handler import arequest_ai
+
+async def main():
+    # Run multiple requests concurrently
+    responses = await asyncio.gather(
+        arequest_ai(provider="google", model="gemini-2.0-flash", user_text="Hello from Google"),
+        arequest_ai(provider="anthropic", model="claude-sonnet-4-20250514", user_text="Hello from Anthropic"),
+        arequest_ai(provider="openai", model="gpt-4o", user_text="Hello from OpenAI"),
+    )
+    for i, response in enumerate(responses):
+        print(f"Response {i+1}: {response[:50]}...")
+
+asyncio.run(main())
+```
+
+### Model Information
+
+List available models and get model details:
+
+```python
+from multi_ai_handler import list_models, get_model_info
+
+# List all models from all providers
+all_models = list_models()
+print(all_models)
+# {'google': ['models/gemini-2.0-flash', ...], 'anthropic': [...], ...}
+
+# Get info for a specific model
+info = get_model_info(provider="google", model="models/gemini-2.0-flash")
+print(info)
+# {'name': 'models/gemini-2.0-flash', 'display_name': 'Gemini 2.0 Flash', 'input_token_limit': 1048576, ...}
+```
+
 ### Using AIProviderManager
 
 For more control, use the `AIProviderManager` class directly. This allows you to register custom providers and manage the provider lifecycle.
@@ -302,6 +386,87 @@ def request_ai(
 
 ---
 
+### `stream_ai()` (Streaming)
+
+Stream tokens in real-time as they are generated.
+
+```python
+def stream_ai(
+    provider: str,
+    model: str,
+    system_prompt: str = None,
+    user_text: str = None,
+    file: str | Path | dict = None,
+    temperature: float = 0.2,
+    local: bool = False
+) -> Iterator[str]
+```
+
+**Returns:** Iterator yielding string chunks as they are generated.
+
+---
+
+### `arequest_ai()` (Async)
+
+Async version of `request_ai()`.
+
+```python
+async def arequest_ai(
+    provider: str,
+    model: str,
+    system_prompt: str = None,
+    user_text: str = None,
+    file: str | Path | dict = None,
+    temperature: float = 0.2,
+    json_output: bool = False,
+    local: bool = False
+) -> str | dict
+```
+
+---
+
+### `astream_ai()` (Async Streaming)
+
+Async streaming version.
+
+```python
+async def astream_ai(
+    provider: str,
+    model: str,
+    system_prompt: str = None,
+    user_text: str = None,
+    file: str | Path | dict = None,
+    temperature: float = 0.2,
+    local: bool = False
+) -> AsyncIterator[str]
+```
+
+---
+
+### `list_models()`
+
+List available models from all registered providers.
+
+```python
+def list_models() -> dict[str, list[str]]
+```
+
+**Returns:** Dictionary mapping provider names to lists of model names.
+
+---
+
+### `get_model_info()`
+
+Get metadata for a specific model.
+
+```python
+def get_model_info(provider: str, model: str) -> dict
+```
+
+**Returns:** Dictionary with provider-specific model metadata.
+
+---
+
 ### `AIProviderManager` Class
 
 The main class for managing AI providers.
@@ -313,21 +478,23 @@ class AIProviderManager:
     def register_provider(self, name: str, provider: type[AIProvider]) -> None
         """Register a custom provider class."""
 
-    def generate(
-        self,
-        provider: str,
-        model: str,
-        system_prompt: str = None,
-        user_text: str = None,
-        file: str | Path | dict = None,
-        temperature: float = 0.2,
-        local: bool = False,
-        json_output: bool = False
-    ) -> str | dict
+    def generate(...) -> str | dict
         """Generate a response from the specified provider."""
+
+    def stream(...) -> Iterator[str]
+        """Stream a response from the specified provider."""
+
+    async def agenerate(...) -> str | dict
+        """Async generate a response."""
+
+    async def astream(...) -> AsyncIterator[str]
+        """Async stream a response."""
 
     def list_models(self) -> dict[str, list[str]]
         """List available models from all registered providers."""
+
+    def get_model_info(self, provider: str, model: str) -> dict
+        """Get model metadata."""
 ```
 
 ---
@@ -338,23 +505,21 @@ All provider classes implement the `AIProvider` interface:
 
 ```python
 class AIProvider(ABC):
-    @abstractmethod
-    def generate(
-        self,
-        system_prompt: str,
-        user_text: str = None,
-        file: str | Path | dict = None,
-        model: str = None,
-        temperature: float = 0.0,
-        local: bool = False
-    ) -> str
+    # Sync methods
+    def generate(..., json_output: bool = False) -> str | dict
+    def stream(...) -> Iterator[str]
 
-    @abstractmethod
+    # Async methods
+    async def agenerate(..., json_output: bool = False) -> str | dict
+    async def astream(...) -> AsyncIterator[str]
+
+    # Model info
     def list_models(self) -> list[str]
+    def get_model_info(self, model: str) -> dict
 ```
 
 **Available providers:**
-- `AnthropicProvider` - Anthropic Claude API (streaming support)
+- `AnthropicProvider` - Anthropic Claude API
 - `GoogleProvider` - Google Gemini API
 - `OpenAIProvider` - OpenAI API (supports custom base_url)
 - `OpenrouterProvider` - OpenRouter API

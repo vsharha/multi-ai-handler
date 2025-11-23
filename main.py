@@ -27,7 +27,7 @@ async def async_example():
     print(response)
 
 async def async_stream_example():
-    async for chunk in astream_ai(provider="google", model="gemini-2.0-flash", user_text="Write a haiku about async programming"):
+    async for chunk in astream_ai(provider="cerebras", model="gpt-oss-120b", user_text="Write 20 haikus about async programming"):
         print(chunk, end="", flush=True)
     print()
 
