@@ -1,37 +1,10 @@
-from multi_ai_handler.ai_provider import AIProvider
-from pathlib import Path
+from multi_ai_handler.providers.openai import OpenAIProvider
 import os
 
-try:
-    from cerebras.cloud.sdk import Cerebras
-    CEREBRAS_AVAILABLE = True
-except ImportError:
-    CEREBRAS_AVAILABLE = False
-
-from multi_ai_handler.generate_payload import generate_local_payload
-
-
-class CerebrasProvider(AIProvider):
-    def __init__(self) -> None:
-        super().__init__()
-        self.client = Cerebras(
-            api_key=os.environ.get("CEREBRAS_API_KEY")
+class CerebrasProvider(OpenAIProvider):
+    def __init__(self):
+        super().__init__(
+            base_url="https://api.cerebras.ai/v1",
+            api_key=os.getenv("CEREBRAS_API_KEY"),
+            local=True
         )
-
-    def generate(self, system_prompt: str, user_text: str=None, file: str | Path | dict | None=None, model:str=None, temperature: float=0.0) -> str:
-        if not CEREBRAS_AVAILABLE:
-            raise ImportError(
-                "Cerebras is not installed. Install it with: pip install multi-ai-handler[extra]"
-            )
-
-        messages: list = generate_local_payload(user_text, system_prompt, file)
-
-        response = self.client.chat.completions.create(
-            messages=messages,
-            model=model,
-            stream=False,
-            max_completion_tokens=20000,
-            temperature=temperature
-        )
-
-        return response.choices[0].message.content
