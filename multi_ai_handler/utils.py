@@ -9,10 +9,12 @@ if TYPE_CHECKING:
 
 @dataclass
 class AIResponse:
-    content: str
+    content: str | dict
     history: list[dict] | None = None
 
     def __str__(self) -> str:
+        if isinstance(self.content, dict):
+            return json.dumps(self.content, indent=4)
         return self.content
 
     def __repr__(self) -> str:
